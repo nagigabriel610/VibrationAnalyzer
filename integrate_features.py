@@ -1,4 +1,37 @@
 """
+Step-by-Step Integration Guide for Interactive Frequency Analysis Features
+This script will help you safely integrate the new features into your existing code
+"""
+
+import os
+import shutil
+from datetime import datetime
+
+def create_backup():
+    """Create backup of current working files"""
+    print("🛡️  Creating backup of current files...")
+    
+    backup_dir = f"backup_{datetime.now().strftime('%Y%m%d_%H%M%S')}"
+    os.makedirs(backup_dir, exist_ok=True)
+    
+    files_to_backup = [
+        'src/gui/main_window.py',
+        'src/analysis/signal_processor.py'
+    ]
+    
+    for file_path in files_to_backup:
+        if os.path.exists(file_path):
+            backup_path = os.path.join(backup_dir, os.path.basename(file_path))
+            shutil.copy2(file_path, backup_path)
+            print(f"   ✅ Backed up: {file_path} → {backup_path}")
+    
+    print(f"   📁 Backup created in: {backup_dir}")
+    return backup_dir
+
+def create_enhanced_main_window():
+    """Create the enhanced main_window.py with all new features"""
+    
+    enhanced_code = '''"""
 Enhanced Main GUI Window for Vibration Analyzer with Interactive Features
 Professional interface with frequency range controls and interactive plots
 """
@@ -147,15 +180,11 @@ class InteractivePlotWidget(QWidget):
         
         # Plot based on amplitude scale
         if amplitude_scale == "Logarithmic (dB)":
-            # dB mode: plot dB values on linear axis
             self.ax.plot(frequencies, magnitude, 'b-', linewidth=1, label='Magnitude (dB)')
             self.ax.set_ylabel('Magnitude (dB)')
-            self.ax.set_yscale('linear')
         else:
-            # Linear mode: plot magnitude values on linear axis
-            self.ax.plot(frequencies, magnitude, 'b-', linewidth=1, label='Magnitude')
+            self.ax.semilogy(frequencies, magnitude, 'b-', linewidth=1, label='Magnitude')
             self.ax.set_ylabel('Magnitude')
-            self.ax.set_yscale('linear')
         
         self.ax.set_xlabel('Frequency (Hz)')
         self.ax.set_title(title)
@@ -178,7 +207,7 @@ class InteractivePlotWidget(QWidget):
         if hasattr(self, 'ax') and self.ax and self.current_frequencies is not None:
             self.span_selector = SpanSelector(
                 self.ax, self.on_span_select, 'horizontal',
-                useblit=True, props=dict(alpha=0.3, facecolor='red')
+                useblit=True, rectprops=dict(alpha=0.3, facecolor='red')
             )
             
     def on_span_select(self, xmin, xmax):
@@ -316,7 +345,7 @@ class InteractivePlotWidget(QWidget):
                         freq = peak_freqs[i]
                         amp = peak_amps[i]
                         if self.current_amplitude_scale == "Logarithmic (dB)":
-                            self.ax.annotate(f'{freq:.1f} Hz\n{amp:.1f} dB', 
+                            self.ax.annotate(f'{freq:.1f} Hz\\n{amp:.1f} dB', 
                                            (freq, amp),
                                            xytext=(5, 5), textcoords='offset points',
                                            fontsize=8, alpha=0.8)
@@ -328,53 +357,22 @@ class InteractivePlotWidget(QWidget):
             
             # Update legend
             self.ax.legend()
-
+            
     def hide_peaks(self):
         """Remove peak markers from plot"""
         if hasattr(self, 'peak_markers') and self.peak_markers:
-            try:
-                self.peak_markers.remove()
-            except:
-                pass  # Ignore removal errors
+            self.peak_markers.remove()
             self.peak_markers = None
             
-        # Remove annotations safely
-        try:
-            # Clear all annotations by recreating the plot data
-            if hasattr(self, 'ax') and self.ax and self.current_frequencies is not None:
-                # Store current plot data
-                current_lines = []
-                for line in self.ax.get_lines():
-                    if not (hasattr(line, '_label') and 'peaks found' in str(line._label)):
-                        current_lines.append((line.get_xdata(), line.get_ydata(), line.get_color(), line.get_linewidth()))
-                
-                # Clear axis and redraw main plot
-                self.ax.clear()
-                
-                # Redraw the main spectrum
-                for xdata, ydata, color, linewidth in current_lines:
-                    if len(xdata) > 100:  # This is likely the main spectrum
-                        if self.current_amplitude_scale == "Logarithmic (dB)":
-                            self.ax.plot(xdata, ydata, color=color, linewidth=linewidth)
-                            self.ax.set_ylabel('Magnitude (dB)')
-                        else:
-                            self.ax.plot(xdata, ydata, color=color, linewidth=linewidth)
-                            self.ax.set_ylabel('Magnitude')
-                        break
-                
-                self.ax.set_xlabel('Frequency (Hz)')
-                self.ax.grid(self.show_grid_cb.isChecked(), alpha=0.3)
-                
-        except Exception as e:
-            # If all else fails, just ignore the annotation removal
-            print(f"Note: Could not remove peak annotations (matplotlib compatibility): {e}")
-        
+        # Remove annotations
+        for child in self.ax.get_children():
+            if hasattr(child, 'get_text'):
+                if 'Hz' in str(child.get_text()):
+                    child.remove()
+                    
         # Update legend if axis exists
         if hasattr(self, 'ax') and self.ax:
-            try:
-                self.ax.legend()
-            except:
-                pass
+            self.ax.legend()
         
     def zoom_in(self):
         """Zoom in by factor of 2"""
@@ -555,7 +553,7 @@ class EnhancedAnalysisWorker(QThread):
             
         except Exception as e:
             import traceback
-            error_msg = f"Analysis failed: {str(e)}\n\n{traceback.format_exc()}"
+            error_msg = f"Analysis failed: {str(e)}\\n\\n{traceback.format_exc()}"
             self.analysis_error.emit(error_msg)
     
     def apply_frequency_range(self, freq_analysis, freq_range):
@@ -1131,6 +1129,73 @@ def main():
     window.show()
     
     sys.exit(app.exec_())
+
+if __name__ == "__main__":
+    main()
+'''
+
+    return enhanced_code
+
+def main():
+    """Main integration function"""
+    print("🚀 VIBRATION ANALYZER PRO - INTERACTIVE FEATURES INTEGRATION")
+    print("=" * 70)
+    print("This will add interactive frequency analysis features to your software:")
+    print("✅ Custom frequency analysis ranges")
+    print("✅ Linear vs Logarithmic amplitude scales")
+    print("✅ Interactive zoom and pan on FFT plots")
+    print("✅ Peak detection and highlighting")
+    print("✅ Cursor tracking with frequency/amplitude display")
+    print("✅ Keyboard shortcuts and span selection")
+    print()
+    
+    # Safety check
+    response = input("Do you want to proceed with the integration? (y/n): ").strip().lower()
+    if response != 'y':
+        print("❌ Integration cancelled by user.")
+        return
+    
+    # Step 1: Create backup
+    backup_dir = create_backup()
+    
+    # Step 2: Create enhanced main window
+    print("\\n🔧 Creating enhanced main_window.py...")
+    enhanced_code = create_enhanced_main_window()
+    
+    # Write the enhanced main window
+    enhanced_file = 'src/gui/main_window_enhanced.py'
+    with open(enhanced_file, 'w', encoding='utf-8') as f:
+        f.write(enhanced_code)
+    
+    print(f"   ✅ Created: {enhanced_file}")
+    
+    # Step 3: Instructions
+    print("\\n📋 NEXT STEPS:")
+    print("1. TEST the enhanced version first:")
+    print("   python -c \"from src.gui.main_window_enhanced import main; main()\"")
+    print()
+    print("2. If it works correctly, replace the original:")
+    print("   copy src\\gui\\main_window_enhanced.py src\\gui\\main_window.py")
+    print()
+    print("3. Commit your changes:")
+    print("   git add .")
+    print("   git commit -m 'Added interactive frequency analysis features'")
+    print("   git push")
+    print()
+    print("🛡️  SAFETY NET:")
+    print(f"   Your original files are backed up in: {backup_dir}")
+    print("   If anything goes wrong, you can restore from backup.")
+    print()
+    print("🎯 NEW FEATURES YOU'LL HAVE:")
+    print("   • Custom frequency range controls")
+    print("   • Linear/Log amplitude scale toggle")
+    print("   • Interactive zoom with drag selection")
+    print("   • Peak detection and highlighting")
+    print("   • Real-time cursor frequency tracking")
+    print("   • Keyboard shortcuts (r=reset, g=grid, p=peaks)")
+    print("   • Professional navigation toolbar")
+    print()
+    print("Ready to test your enhanced vibration analyzer! 🚀")
 
 if __name__ == "__main__":
     main()
